@@ -15,7 +15,7 @@
     height:100vh;
     display:flex;
     flex-direction:column;
-    overflow:hidden; 
+    overflow:hidden; /* empêche le scroll */
   }
   header, footer {
     background: #28a745;
@@ -24,14 +24,18 @@
     padding: 20px;
     font-weight:bold;
     text-shadow: 1px 1px 2px #000;
-    flex-shrink:0; 
+    flex-shrink:0; /* empêche d’écraser le header/footer */
     position: fixed;
     left: 0;
     right: 0;
     z-index: 10;
   }
-  header { top:0; }
-  footer { bottom:0; }
+  header {
+    top:0;
+  }
+  footer {
+    bottom:0;
+  }
   main {
     flex:1;
     display: flex;
@@ -40,9 +44,9 @@
     flex-wrap: wrap;
     gap: 40px;
     padding: 20px;
-    margin-top: 80px;   
-    margin-bottom: 80px; 
-    overflow:auto;      
+    margin-top: 80px;   /* espace pour le header */
+    margin-bottom: 80px;/* espace pour le footer */
+    overflow:auto;      /* si jamais le contenu dépasse */
   }
   .category-card {
     width: 260px;
@@ -115,44 +119,32 @@ Créé Par : M.Seddik Elidrissi
 <script>
 function goToCategory(url){
   Swal.fire({
-    title: "Redirection",
-    text: "Vous allez être redirigé vers votre rayon choisi.. Merci d'avoir utiliser MMS59.vercel.app!",
+    title: "Bienvenue !",
+    html: `
+      <p style="margin: 8px 0;">Nous sommes ravis de préparer vos commandes avec soin.</p>
+      <p style="margin: 8px 0;">Vous allez être redirigé vers votre rayon choisi.</p>
+      <p style="margin: 8px 0;">Merci d'avoir utilisé <strong>MMS59.vercel.app</strong> !</p>
+      <p style="margin: 8px 0;">Bon shopping !</p>
+    `,
     icon: "info",
-    confirmButtonText: "OK"
-  }).then(()=>{
+    confirmButtonText: "OK",
+    customClass: {
+      popup: 'swal-center-text'
+    }
+  }).then(() => {
     window.location.href = url;
   });
 }
-
-// Overlay automatique au démarrage avec animation et message WhatsApp + "Bon shopping"
-window.addEventListener('load', () => {
-  Swal.fire({
-    title: 'Bienvenue !',
-    html: 'Nous sommes ravis de préparer vos commandes avec soin !<br><br>Il vous suffit de choisir vos articles et d\'envoyer votre commande dans le panier via WhatsApp.<br><br><strong>Bon shopping !</strong>',
-    icon: 'info',
-    confirmButtonText: 'Commencer',
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    showClass: {
-      popup: 'swal2-show swal2-fade', 
-      backdrop: 'swal2-backdrop-show'
-    },
-    hideClass: {
-      popup: 'swal2-hide swal2-fade'
-    },
-    width: '90%',
-    padding: '3em',
-    background: '#28a745',
-    color: '#fff',
-    backdrop: `
-      rgba(0,0,0,0.6)
-      url("https://cdn.pixabay.com/photo/2017/08/30/01/05/shopping-2693038_960_720.png")
-      left top
-      no-repeat
-    `
-  });
-});
 </script>
+
+<style>
+/* Centrer le texte dans la popup */
+.swal-center-text .swal2-html-container {
+  text-align: center;
+}
+</style>
+
 
 </body>
 </html>
+
