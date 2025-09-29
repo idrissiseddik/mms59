@@ -125,99 +125,118 @@ const unites = [
 {id:15,name:"Coriandre en sachet",price:3.95,img:"images/coriandre.jpg"}
 ];
 
-const products = [...fruits.map(p=>({...p, category:'fruits'})), 
-                  ...legumes.map(p=>({...p, category:'legumes'})), 
-                  ...unites.map(p=>({...p, category:'unite'}))];
+let products = [...fruits.map(p=>({...p, category:'fruits'})), 
+                ...legumes.map(p=>({...p, category:'legumes'})), 
+                ...unites.map(p=>({...p, category:'unite'}))];
 
-let cart=[]; let quantities={}; products.forEach(p=>quantities[p.id]=1);
+let cart=[]; 
+let quantities={}; 
+products.forEach(p=>quantities[p.id]=1);
+
+// Fonction de mélange aléatoire (Fisher-Yates)
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
 
 function renderProducts(filter='all'){
-const c=document.getElementById("products-list");c.innerHTML="";
-products.filter(p=>filter==='all'||p.category===filter).forEach(p=>{
-let cls=p.category+"-card";
-let qtyDisplay=p.category==='unite'?`${quantities[p.id]} unité(s)`:`${quantities[p.id]} × 250g = ${quantities[p.id]*250}g`;
-let totalPrice=(p.price*quantities[p.id]).toFixed(2);
-c.innerHTML+=`
-<div class="col-12">
-<div class="product-card ${cls}" id="card-${p.id}">
-<img src="${p.img}" alt="${p.name}" class="img-fluid">
-<div class="product-title">${p.name}</div>
-<div class="price">${p.price} DH ${p.category==='unite'?'/ unité':'/ 250g'}</div>
-<div class="total-price">Total: ${totalPrice} DH</div>
-<div class="quantity-control">
-<button onclick="changeQty(${p.id},-1)">-</button>
-<span id="qty-${p.id}" class="quantity-display">${qtyDisplay}</span>
-<button onclick="changeQty(${p.id},1)">+</button>
-</div>
-<button class="btn-add" onclick="addToCart(${p.id})"><i class="fas fa-cart-plus"></i> Ajouter</button>
-</div></div>`;});
+  const c=document.getElementById("products-list");
+  c.innerHTML="";
+  // Mélanger les produits à chaque affichage
+  let filtered = products.filter(p=>filter==='all'||p.category===filter);
+  filtered = shuffleArray(filtered);
+
+  filtered.forEach(p=>{
+    let cls=p.category+"-card";
+    let qtyDisplay=p.category==='unite'?`${quantities[p.id]} unité(s)`:`${quantities[p.id]} × 250g = ${quantities[p.id]*250}g`;
+    let totalPrice=(p.price*quantities[p.id]).toFixed(2);
+    c.innerHTML+=`
+    <div class="col-12">
+      <div class="product-card ${cls}" id="card-${p.id}">
+        <img src="${p.img}" alt="${p.name}" class="img-fluid">
+        <div class="product-title">${p.name}</div>
+        <div class="price">${p.price} DH ${p.category==='unite'?'/ unité':'/ 250g'}</div>
+        <div class="total-price">Total: ${totalPrice} DH</div>
+        <div class="quantity-control">
+          <button onclick="changeQty(${p.id},-1)">-</button>
+          <span id="qty-${p.id}" class="quantity-display">${qtyDisplay}</span>
+          <button onclick="changeQty(${p.id},1)">+</button>
+        </div>
+        <button class="btn-add" onclick="addToCart(${p.id})"><i class="fas fa-cart-plus"></i> Ajouter</button>
+      </div>
+    </div>`;
+  });
 }
 
 document.getElementById('filter-select').addEventListener('change',()=>{
-let sel=document.getElementById('filter-select').value;
-renderProducts(sel);
-let text=sel==='all'?'Tous les produits':sel==='fruits'?'Fruits':sel==='legumes'?'Légumes':'Unités';
-Swal.fire({title:'Filtre appliqué',text:`Vous filtrez: ${text}`,icon:'info',timer:1200,showConfirmButton:false});
+  let sel=document.getElementById('filter-select').value;
+  renderProducts(sel);
+  let text=sel==='all'?'Tous les produits':sel==='fruits'?'Fruits':sel==='legumes'?'Légumes':'Unités';
+  Swal.fire({title:'Filtre appliqué',text:`Vous filtrez: ${text}`,icon:'info',timer:1200,showConfirmButton:false});
 });
 
 function changeQty(id,d){
-quantities[id]=Math.max(1,(quantities[id]||1)+d);
-const p=products.find(pr=>pr.id===id);
-let qtyDisplay=p.category==='unite'?`${quantities[id]} unité(s)`:`${quantities[id]} × 250g = ${quantities[id]*250}g`;
-document.getElementById(`qty-${id}`).textContent=qtyDisplay;
-let totalPrice=(p.price*quantities[id]).toFixed(2);
-document.querySelector(`#card-${id} .total-price`).textContent=`Total: ${totalPrice} DH`;
+  quantities[id]=Math.max(1,(quantities[id]||1)+d);
+  const p=products.find(pr=>pr.id===id);
+  let qtyDisplay=p.category==='unite'?`${quantities[id]} unité(s)`:`${quantities[id]} × 250g = ${quantities[id]*250}g`;
+  document.getElementById(`qty-${id}`).textContent=qtyDisplay;
+  let totalPrice=(p.price*quantities[id]).toFixed(2);
+  document.querySelector(`#card-${id} .total-price`).textContent=`Total: ${totalPrice} DH`;
 }
 
 function addToCart(id){
-const p=products.find(pr=>pr.id===id);const qty=quantities[id];
-const grams=p.category==='unite'?qty:qty*250;
-if(cart.find(x=>x.id===id)){Swal.fire({title:'Déjà au panier',text:`${p.name} est déjà dans le panier`,icon:'warning'});return;}
-cart.push({...p,qty,grams});
-updateCartCount();renderCart();
-document.getElementById(`card-${id}`).classList.add('added');
-setTimeout(()=>{document.getElementById(`card-${id}`).classList.remove('added');},500);
-Swal.fire({icon:'success',title:'Ajouté!',text:`${p.name} ajouté avec ${p.category==='unite'?qty+' unité(s)':grams+'g'}`});
+  const p=products.find(pr=>pr.id===id);const qty=quantities[id];
+  const grams=p.category==='unite'?qty:qty*250;
+  if(cart.find(x=>x.id===id)){Swal.fire({title:'Déjà au panier',text:`${p.name} est déjà dans le panier`,icon:'warning'});return;}
+  cart.push({...p,qty,grams});
+  updateCartCount();renderCart();
+  document.getElementById(`card-${id}`).classList.add('added');
+  setTimeout(()=>{document.getElementById(`card-${id}`).classList.remove('added');},500);
+  Swal.fire({icon:'success',title:'Ajouté!',text:`${p.name} ajouté avec ${p.category==='unite'?qty+' unité(s)':grams+'g'}`});
 }
 
 function updateCartCount(){document.getElementById("cart-count").textContent=cart.length;}
 
 function renderCart(){
-const c=document.getElementById("cart-items");c.innerHTML="";let total=0;
-cart.forEach((item,i)=>{
-let subtotal=item.price*item.qty;total+=subtotal;
-c.innerHTML+=`<div class="d-flex align-items-center mb-2 border-bottom pb-2">
-<img src="${item.img}" width="60" class="me-2 rounded">
-<div><strong>${item.name}</strong><br>${item.qty} ${item.category==='unite'?'unité(s)':'× 250g = '+item.grams+'g'}<br>
-<span class="text-success">${item.price} DH ${item.category==='unite'?'/ unité':'/ 250g'}</span><br>
-<span class="fw-bold text-dark">Sous-total: ${subtotal.toFixed(2)} DH</span></div>
-<i class="fas fa-trash remove-btn ms-auto" onclick="confirmRemove(${i})"></i></div>`;});
+  const c=document.getElementById("cart-items");c.innerHTML="";let total=0;
+  cart.forEach((item,i)=>{
+    let subtotal=item.price*item.qty;total+=subtotal;
+    c.innerHTML+=`<div class="d-flex align-items-center mb-2 border-bottom pb-2">
+      <img src="${item.img}" width="60" class="me-2 rounded">
+      <div><strong>${item.name}</strong><br>${item.qty} ${item.category==='unite'?'unité(s)':'× 250g = '+item.grams+'g'}<br>
+      <span class="text-success">${item.price} DH ${item.category==='unite'?'/ unité':'/ 250g'}</span><br>
+      <span class="fw-bold text-dark">Sous-total: ${subtotal.toFixed(2)} DH</span></div>
+      <i class="fas fa-trash remove-btn ms-auto" onclick="confirmRemove(${i})"></i></div>`;
+  });
 }
 
 function confirmRemove(i){
-Swal.fire({title:"Supprimer?",text:"Voulez-vous retirer cet article du panier ?",icon:"warning",showCancelButton:true,confirmButtonText:"Oui, supprimer"}).then(r=>{
-if(r.isConfirmed){cart.splice(i,1);updateCartCount();renderCart();Swal.fire("Supprimé!","L'article a été retiré.","success");}
-});
+  Swal.fire({title:"Supprimer?",text:"Voulez-vous retirer cet article du panier ?",icon:"warning",showCancelButton:true,confirmButtonText:"Oui, supprimer"}).then(r=>{
+    if(r.isConfirmed){cart.splice(i,1);updateCartCount();renderCart();Swal.fire("Supprimé!","L'article a été retiré.","success");}
+  });
 }
 
 function validateOrder(){
-if(cart.length===0){Swal.fire('Panier vide','Ajoutez un produit','warning');return;}
-const n=document.getElementById('client-name').value.trim();
-const a=document.getElementById('client-address').value.trim();
-const c=document.getElementById('client-comment').value.trim();
-if(!n||!a){Swal.fire('Champs manquants','Nom et adresse requis','warning');return;}
-let msg=`Bonjour,\nCommande:\n`;let total=0;
-cart.forEach((it,i)=>{let q=it.category==='unite'?`${it.qty} unité(s)`:it.grams+"g";let st=it.price*it.qty;total+=st;
-msg+=`${i+1}. ${it.name} = ${q} | ${st.toFixed(2)} DH\n`;});
-msg+=`Total général: ${total.toFixed(2)} DH\nNom: ${n}\nAdresse: ${a}`;
-if(c){msg+=`\nCommentaire: ${c}`;}
-const encoded=encodeURIComponent(msg);
-window.open(`https://wa.me/212608975435?text=${encoded}`);
-Swal.fire('Merci!','Votre commande sera préparée.','success');
-cart=[];updateCartCount();renderCart();
-document.getElementById('client-name').value='';
-document.getElementById('client-address').value='';
-document.getElementById('client-comment').value='';
+  if(cart.length===0){Swal.fire('Panier vide','Ajoutez un produit','warning');return;}
+  const n=document.getElementById('client-name').value.trim();
+  const a=document.getElementById('client-address').value.trim();
+  const c=document.getElementById('client-comment').value.trim();
+  if(!n||!a){Swal.fire('Champs manquants','Nom et adresse requis','warning');return;}
+  let msg=`Bonjour,\nCommande:\n`;let total=0;
+  cart.forEach((it,i)=>{let q=it.category==='unite'?`${it.qty} unité(s)`:it.grams+"g";let st=it.price*it.qty;total+=st;
+  msg+=`${i+1}. ${it.name} = ${q} | ${st.toFixed(2)} DH\n`;});
+  msg+=`Total général: ${total.toFixed(2)} DH\nNom: ${n}\nAdresse: ${a}`;
+  if(c){msg+=`\nCommentaire: ${c}`;}
+  const encoded=encodeURIComponent(msg);
+  window.open(`https://wa.me/212608975435?text=${encoded}`);
+  Swal.fire('Merci!','Votre commande sera préparée.','success');
+  cart=[];updateCartCount();renderCart();
+  document.getElementById('client-name').value='';
+  document.getElementById('client-address').value='';
+  document.getElementById('client-comment').value='';
 }
 
 document.addEventListener('DOMContentLoaded',()=>renderProducts());
